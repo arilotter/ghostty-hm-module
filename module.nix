@@ -19,14 +19,14 @@ with lib; let
   toGhosttyConfig = generators.toKeyValue {
     listsAsDuplicateKeys = true;
     mkKeyValue = key: value: let
-      value' =
-        (
-          if isBool value
+      value' = (
+          if key == "palette"
+          then throw "palette should be configured using the paletteColors option"
+          else if isBool value
           then boolToString
           else toString
-        )
-        value;
-      # TODO(clo4): trim off trailing zeroes for floats?
+        ) value;
+        # TODO(clo4): trim off trailing zeroes for floats?
     in "${key} = ${value'}";
   };
 
@@ -164,6 +164,24 @@ in {
       '';
     };
 
+    paletteColors = mkOption {
+      type = types.attrsOf types.str;
+      default = {};
+      example = literalExpression ''
+        {
+          "0" = "#000000";
+          "1" = "#ff0000";
+          "2" = "#00ff00";
+          "3" = "#ffff00";
+        }
+      '';
+      description = ''
+        Configure terminal palette colors.
+        Keys should be numbers (as strings) from 0 to 255,
+        and values should be hex color codes.
+      '';
+    };
+
     package = mkPackageOption pkgs "Ghostty" {
       # making it nullable allows you to skip building/installing
       # it if you're managing it externally, e.g. using the signed
@@ -203,6 +221,11 @@ in {
         '')
 
         (toGhosttyConfig cfg.settings)
+
+        (concatStringsSep "\n" (mapAttrsToList
+          (index: color: "palette = ${index}=${color}")
+          cfg.paletteColors))
+
 
         (toGhosttyKeybindings cfg.keybindings)
 
