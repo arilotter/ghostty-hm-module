@@ -1,3 +1,6 @@
+# don't use this
+home-manager has a module for ghostty built in now!!!
+
 # Ghostty Home Manager module
 
 Until Ghostty is open source, the module can't be upstreamed to
